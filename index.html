@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typer PWA</title>
+    <link rel="apple-touch-icon" href="[via.placeholder.com](https://via.placeholder.com/192/2e7d32/ffffff?text=T)">
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 150px; }
+        .status { text-align: center; font-weight: bold; color: #2e7d32; margin-bottom: 5px; }
+        .table-header { display: flex; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; font-size: 0.9em; }
+        .row { display: flex; align-items: center; padding: 4px 0; border-bottom: 1px solid #f9f9f9; }
+        .col-mecz { flex: 3; font-size: 0.9em; }
+        .col-wynik { flex: 2; display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .col-joker { flex: 1; text-align: center; }
+        input[type="number"] { width: 35px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 4px; }
+        .user-section { margin-top: 40px; }
+        .user-input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 30px;}
+        .btn-send { width: 100%; background: #2e7d32; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span style="font-weight: bold;">Etap:</span>
+        <select id="stage">
+            <option value="0">1/4 Finału</option>
+            <option value="619158091">1/2 Finału</option>
+            <option value="1775579869">Finały</option>
+        </select>
+    </header>
+
+    <div id="status" class="status">ŁADOWANIE...</div>
+
+    <div class="table-header">
+        <div class="col-mecz">Mecz</div>
+        <div class="col-wynik">Wynik</div>
+        <div class="col-joker">Joker</div>
+    </div>
+
+    <div id="match-list"></div>
+
+    <div class="user-section">
+        <label style="font-weight: bold;">Imię i Nazwisko:</label>
+        <input type="text" id="userName" class="user-input" placeholder="np. Jan Kowalski">
+    </div>
+
+    <button class="btn-send" onclick="sendTypy()">WYŚLIJ TYPY</button>
+</div>
+
+<script>
+    // --- KONFIGURACJA ---
+    const baseUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQd7RZ5-PO-knXZfYohz6daMXryQTgJ27DJIHAUEBLiB6wT-s5lB_zraplf3K-RMuEWFX3lTx52vLcf/pub?output=csv";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbx-AqNSfQKd1h4BDk4raw9h8oMSgHBk1gbcYsY8sz__Xmr_4MhPC2RQZV4zvD4GcWDycA/exec";
+
+    const statusDiv = document.getElementById('status');
+    const stageSelect = document.getElementById('stage');
+    const matchListDiv = document.getElementById('match-list');
+
+    async function loadData() {
+        statusDiv.innerText = "ŁADOWANIE...";
+        matchListDiv.innerHTML = "";
+        const url = `${baseUrl}&gid=${stageSelect.value}&cache=${Date.now()}`;
+
+        try {
+            const response = await fetch(url);
+            const text = await response.text();
+            const lines = text.split('\n').map(l => l.replace(/"/g, '').trim()).filter(l => l !== "");
+            
+            lines.forEach((line, index) => {
+                const cells = line.split(',');
+                const nrMeczu = cells[0] || (index + 1);
+                const t1 = cells[1] || "Drugzyna A";
+                const t2 = cells[2] || "Drugzyna B";
+
+                const row = document.createElement('div');
+                row.className = 'row';
+                row.innerHTML = `
+                    <div class="col-mecz" data-t1="${t1}" data-t2="${t2}" data-nr="${nrMeczu}">
+                        ${nrMeczu}: ${t1} - ${t2}
+                    </div>
+                    <div class="col-wynik">
+                        <input type="number" class="g1" placeholder="0">
+                        <span>:</span>
+                        <input type="number" class="g2" placeholder="0">
+                    </div>
+                    <div class="col-joker">
+                        <input type="radio" name="joker" value="${index}">
+                    </div>
+                `;
+                matchListDiv.appendChild(row);
+            });
+            statusDiv.innerText = "TYPOWANIE";
+        } catch (error) {
+            statusDiv.innerText = "BŁĄD SIECI";
+        }
+    }
+
+    async function sendTypy() {
+        const name = document.getElementById('userName').value.trim();
+        const stageText = stageSelect.options[stageSelect.selectedIndex].text;
+        const jokerRadio = document.querySelector('input[name="joker"]:checked');
+
+        if (!name || !jokerRadio) return alert("Podaj imię i zaznacz Jokera!");
+
+        statusDiv.innerText = "WYSYŁANIE...";
+        const typyDanych = [];
+        const rows = document.querySelectorAll('.row');
+        
+        rows.forEach((row, index) => {
+            const el = row.querySelector('.col-mecz');
+            const g1 = row.querySelector('.g1').value || "0";
+            const g2 = row.querySelector('.g2').value || "0";
+            
+            typyDanych.push({ 
+                nr: el.getAttribute('data-nr'), 
+                druzyna: el.getAttribute('data-t1'), 
+                gole: g1, 
+                joker: (jokerRadio.value == index ? "joker" : "") 
+            });
+            typyDanych.push({ 
+                nr: el.getAttribute('data-nr'), 
+                druzyna: el.getAttribute('data-t2'), 
+                gole: g2, 
+                joker: "" 
+            });
+        });
+
+        const payload = { user: name, etap: stageText, typy: typyDanych };
+
+        try {
+            await fetch(scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Typy zostały zapisane!");
+            document.getElementById('userName').value = "";
+            loadData();
+        } catch (error) {
+            alert("Wystąpił błąd!");
+            statusDiv.innerText = "BŁĄD";
+        }
+    }
+
+    stageSelect.addEventListener('change', loadData);
+    loadData();
+</script>
+
+</body>
+</html>
