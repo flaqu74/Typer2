@@ -118,6 +118,7 @@
             const g1 = row.querySelector('.g1').value || "0";
             const g2 = row.querySelector('.g2').value || "0";
             const teams = row.querySelector('.col-mecz').innerText;
+            const isJoker = (jokerRadio.value == index) ? " [JOKER]" : "";
             message += `${teams} ${g1}:${g2}${isJoker}\n`;
             
             typyDanych.push({ 
