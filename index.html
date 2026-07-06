@@ -61,7 +61,7 @@
     const stageSelect = document.getElementById('stage');
     const matchListDiv = document.getElementById('match-list');
 
-    const mailOdbiorcy = "type_srlw@fajne.to";
+    const mailOdbiorcy = "typer_srlw@fajne.to";
 
     async function loadData() {
         statusDiv.innerText = "ŁADOWANIE...";
@@ -147,7 +147,7 @@
             alert("Wystąpił błąd!");
             statusDiv.innerText = "BŁĄD";
         }
-    const subject = `Typy - ${stageText} - ${name}`;
+    const subject = `Potwierdzenie wysłania typów - ${stageText} - ${name}`;
     const mailto = `mailto:${mailOdbiorcy}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
     window.location.href = mailto;           
     }
