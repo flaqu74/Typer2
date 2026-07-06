@@ -111,10 +111,14 @@
         const typyDanych = [];
         const rows = document.querySelectorAll('.row');
         
+        let message = `Uczestnik: ${name}\nEtap: ${stageText}\n\nTYPY:\n`;
+        
         rows.forEach((row, index) => {
             const el = row.querySelector('.col-mecz');
             const g1 = row.querySelector('.g1').value || "0";
             const g2 = row.querySelector('.g2').value || "0";
+            const teams = row.querySelector('.col-mecz').innerText;
+            message += `${teams} ${g1}:${g2}${isJoker}\n`;
             
             typyDanych.push({ 
                 nr: el.getAttribute('data-nr'), 
@@ -129,7 +133,6 @@
                 joker: "" 
             });
         });
-
         const payload = { user: name, etap: stageText, typy: typyDanych };
 
         try {
@@ -141,6 +144,9 @@
             alert("Wystąpił błąd!");
             statusDiv.innerText = "BŁĄD";
         }
+    const subject = `Typy - ${stageText} - ${name}`;
+    const mailto = `mailto:${mailOdbiorcy}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    window.location.href = mailto;           
     }
 
     stageSelect.addEventListener('change', loadData);
