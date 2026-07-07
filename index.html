@@ -18,13 +18,11 @@
         .col-joker { flex: 1; text-align: center; }
         input[type="number"] { width: 25px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 4px; }
         input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-            }
+        input[type="number"]::-webkit-inner-spin-button {-webkit-appearance: none; margin: 0;}
         .user-section { margin-top: 40px; }
         .user-input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 30px;}
         .btn-send { width: 100%; background: #2e7d32; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-send:disabled {background: #9e9e9e; cursor: not-allowed; opacity: .7;}
     </style>
 </head>
 <body>
@@ -54,7 +52,7 @@
         <input type="text" id="userName" class="user-input" placeholder="np. Jan Kowalski">
     </div>
 
-    <button class="btn-send" onclick="sendTypy()">WYŚLIJ TYPY</button>
+    <button id="sendBtn" class="btn-send" onclick="sendTypy()">WYŚLIJ TYPY</button>
 </div>
 
 <script>
@@ -113,7 +111,11 @@
         const jokerRadio = document.querySelector('input[name="joker"]:checked');
 
         if (!name || !jokerRadio) return alert("Podaj imię i zaznacz Jokera!");
-
+        
+            const button = document.getElementById("sendBtn");
+            button.disabled = true;
+            button.innerText = "WYSYŁANIE...";
+        
         statusDiv.innerText = "WYSYŁANIE...";
         const typyDanych = [];
         const rows = document.querySelectorAll('.row');
@@ -146,10 +148,13 @@
         try {
             await fetch(scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             alert("Typy zostały zapisane!");
+            button.innerText = "WYSŁANE";
             document.getElementById('userName').value = "";
             loadData();
         } catch (error) {
             alert("Wystąpił błąd!");
+                button.disabled = false;
+                button.innerText = "WYŚLIJ TYPY";
             statusDiv.innerText = "BŁĄD";
         }
     const subject = `Potwierdzenie wysłania typów - ${stageText} - ${name}`;
